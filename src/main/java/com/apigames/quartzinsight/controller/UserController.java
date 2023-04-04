@@ -1,8 +1,6 @@
 package com.apigames.quartzinsight.controller;
 
-import com.apigames.quartzinsight.entity.Friends;
 import com.apigames.quartzinsight.entity.Users;
-import com.apigames.quartzinsight.repository.FriendRepository;
 import com.apigames.quartzinsight.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,8 +19,6 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private FriendRepository friendRepository;
 
     @GetMapping
     public ResponseEntity<List<Users>> getUsers(){
@@ -41,8 +37,8 @@ public class UserController {
     }
 
     @GetMapping("/{userID}/friends")
-    public ResponseEntity<List<Friends>> getUserFriends(@PathVariable("userID") long userID) {
-        List<Friends> friends = friendRepository.findAllByUser_Id(userID);
+    public ResponseEntity<List<Users>> getUserFriends(@PathVariable("userID") long userID) {
+        List<Users> friends = userRepository.findFriendsByUserId(userID);
         return ResponseEntity.ok(friends);
     }
 }
