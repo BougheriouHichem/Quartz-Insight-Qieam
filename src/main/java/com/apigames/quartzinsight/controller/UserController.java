@@ -64,11 +64,11 @@ public class UserController {
             List<Friends> friendsList = friendRepository.findAll();
             Friends newFriend = new Friends();
 
-            /*for (Friends friendsLists: friendsList){
+            for (Friends friendsLists: friendsList){
                 if (friendsLists.getFriends().getEmail().equals(friend.getEmail())){
                     return ResponseEntity.status(HttpStatus.CONFLICT).build();
                 }
-            }*/
+            }
 
             newFriend.setUser(user);
             newFriend.setFriends(friend);
