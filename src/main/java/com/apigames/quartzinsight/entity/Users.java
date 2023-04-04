@@ -25,7 +25,4 @@ public class Users {
     @Column(name = "email")
     private String email;
 
-
-    /*@OneToMany(mappedBy = "user")
-    private List<Friends> listFriend;*/
 }
