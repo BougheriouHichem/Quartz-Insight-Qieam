@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
 public interface UserRepository extends JpaRepository<Users, Long> {
-    @Query("SELECT f.friend FROM Friends f WHERE f.user.id = :userId")
-    List<Users> findFriendsByUserId(@Param("userId") Long userId);
+
 }

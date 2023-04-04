@@ -7,8 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
 public interface FriendRepository extends JpaRepository<Friends, Long> {
     List<Friends> findAllByUser_Id(long id);
 
+
+    List<Friends> findAllByUser_Username(String username);
 }

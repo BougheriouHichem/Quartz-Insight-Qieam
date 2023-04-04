@@ -41,7 +41,7 @@ public class UserController {
     }
 
     @GetMapping("/{userID}/friends")
-    public ResponseEntity<List<Friends>> getUserFriends(@PathVariable long userID) {
+    public ResponseEntity<List<Friends>> getUserFriends(@PathVariable("userID") long userID) {
         List<Friends> friends = friendRepository.findAllByUser_Id(userID);
         return ResponseEntity.ok(friends);
     }

@@ -3,6 +3,8 @@ package com.apigames.quartzinsight.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,11 +18,11 @@ public class Friends {
     @Column(name = "id")
     private long id;
 
-    @ManyToOne
+    @ManyToOne( cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private Users user;
 
-    @ManyToOne
-    @JoinColumn(name = "friend_id")
-    private Users friend;
+    @OneToMany( cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
+    private List<Users> friends;
 }
