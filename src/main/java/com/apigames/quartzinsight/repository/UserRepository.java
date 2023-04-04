@@ -13,6 +13,9 @@ import java.util.List;
 @EnableAspectJAutoProxy
 public interface UserRepository extends JpaRepository<Users, Long> {
 
+    List<Users> findUsersByEmail(String email);
+    List<Users> findUsersByUsername(String username);
+
     @Query("SELECT f.friends FROM Friends f WHERE f.user.id = :userId")
     List<Users> findFriendsByUserId(@Param("userId") Long userId);
 
