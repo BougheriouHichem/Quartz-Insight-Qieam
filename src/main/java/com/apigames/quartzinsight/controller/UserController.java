@@ -64,15 +64,23 @@ public class UserController {
             List<Friends> friendsList = friendRepository.findAll();
             Friends newFriend = new Friends();
 
+            //Vérifier s'il existe pas dans la liste d'amis
             for (Friends friendsLists: friendsList){
                 if (friendsLists.getFriends().getEmail().equals(friend.getEmail())){
                     return ResponseEntity.status(HttpStatus.CONFLICT).build();
                 }
             }
 
+            //Créer une nouvelle instance de Friends avec l'utilisateur et l'ami fournis
             newFriend.setUser(user);
             newFriend.setFriends(friend);
             Friends savedNewFriend = friendRepository.save(newFriend);
+
+            //Ici je dois Ajouter l'utilisateur à la liste d'amis de l'ami ajouté
+            Friends newReversedFriend = new Friends();
+            newReversedFriend.setUser(friend);
+            newReversedFriend.setFriends(user);
+            friendRepository.save(newReversedFriend);
 
             return ResponseEntity.ok(savedNewFriend);
         }else {
