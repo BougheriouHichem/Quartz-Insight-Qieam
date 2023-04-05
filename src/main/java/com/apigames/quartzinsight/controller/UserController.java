@@ -87,4 +87,21 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable long id){
+        Users existingUser = userRepository.findById(id).orElse(null);
+        if (existingUser != null){
+           /* List<Friends> friendsList = friendRepository.findAllByUser_Id(id);
+            for (Friends friends: friendsList){
+                friendRepository.delete(friends);
+            }*/
+            friendRepository.deleteByUserOrFriends(existingUser, existingUser);
+            userRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

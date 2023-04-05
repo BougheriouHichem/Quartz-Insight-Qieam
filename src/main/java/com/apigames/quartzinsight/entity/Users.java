@@ -2,6 +2,7 @@ package com.apigames.quartzinsight.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Cascade;
 
 import java.util.List;
 
