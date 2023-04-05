@@ -64,7 +64,7 @@ public class UserController {
             List<Friends> friendsList = friendRepository.findAll();
             Friends newFriend = new Friends();
 
-            //Vérifier s'il existe pas dans la liste d'amis
+            //Vérifier s'il n'existe pas dans la liste d'amis
             for (Friends friendsLists: friendsList){
                 if (friendsLists.getFriends().getEmail().equals(friend.getEmail())){
                     return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -99,6 +99,27 @@ public class UserController {
             friendRepository.deleteByUserOrFriends(existingUser, existingUser);
             userRepository.deleteById(id);
             return ResponseEntity.ok().build();
+        }else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public ResponseEntity<?> deleteUserFriend(@PathVariable long userId, @PathVariable long friendId){
+        Optional<Users> existingUser = userRepository.findById(userId);
+        Optional<Users> existingFriend = userRepository.findById(friendId);
+        if (existingUser.isPresent() && existingFriend.isPresent()){
+            List<Users> listFriends = userRepository.findFriendsByUserId(userId);
+
+            Optional<Users> friendUser = listFriends.stream()
+                    .filter(friend -> friend.getId() == friendId)
+                    .findFirst();
+            if (friendUser.isPresent()){
+                friendRepository.deleteByUserAndFriends(existingUser.get(), friendUser.get());
+                return ResponseEntity.ok().build();
+            }else {
+                return ResponseEntity.notFound().build();
+            }
         }else {
             return ResponseEntity.notFound().build();
         }
