@@ -48,5 +48,16 @@ public class GameController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+    @DeleteMapping("/games/{gameId}")
+    public ResponseEntity<?> deleteGame(@PathVariable long gameId){
+        Games existingGame = gameRepository.findById(gameId).orElse(null);
+        if (existingGame != null && existingGame.getAvailability() == true){
+            existingGame.setAvailability(false);
+            gameRepository.save(existingGame);
+            return ResponseEntity.ok().build();
+        }else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
 
 }

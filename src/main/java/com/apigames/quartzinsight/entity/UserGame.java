@@ -10,7 +10,7 @@ import lombok.*;
 @EqualsAndHashCode
 @Entity
 @Table(name = "userGame")
-public class userGame {
+public class UserGame {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "userGame_id")
