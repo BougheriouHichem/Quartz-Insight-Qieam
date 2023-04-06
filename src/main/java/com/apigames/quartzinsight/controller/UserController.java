@@ -4,7 +4,6 @@ import com.apigames.quartzinsight.entity.Friends;
 import com.apigames.quartzinsight.entity.Users;
 import com.apigames.quartzinsight.repository.FriendRepository;
 import com.apigames.quartzinsight.repository.UserRepository;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +40,13 @@ public class UserController {
 
     @GetMapping("/{userID}/friends")
     public ResponseEntity<List<Users>> getUserFriends(@PathVariable("userID") long userID) {
-        List<Users> friends = userRepository.findFriendsByUserId(userID);
-        return ResponseEntity.ok(friends);
+        Optional<Users> user = userRepository.findById(userID);
+        if (user.isPresent()){
+            List<Users> friends = userRepository.findFriendsByUserId(userID);
+            return ResponseEntity.ok(friends);
+        }else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/")
