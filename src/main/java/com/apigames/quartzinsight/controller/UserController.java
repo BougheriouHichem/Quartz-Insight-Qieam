@@ -1,8 +1,12 @@
 package com.apigames.quartzinsight.controller;
 
 import com.apigames.quartzinsight.entity.Friends;
+import com.apigames.quartzinsight.entity.Games;
+import com.apigames.quartzinsight.entity.UserGame;
 import com.apigames.quartzinsight.entity.Users;
 import com.apigames.quartzinsight.repository.FriendRepository;
+import com.apigames.quartzinsight.repository.GameRepository;
+import com.apigames.quartzinsight.repository.UserGameRepository;
 import com.apigames.quartzinsight.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +25,12 @@ public class UserController {
 
     @Autowired
     private FriendRepository friendRepository;
+
+    @Autowired
+    private UserGameRepository userGameRepository;
+
+    @Autowired
+    private GameRepository gameRepository;
 
     @GetMapping
     public ResponseEntity<List<Users>> getUsers(){
@@ -126,6 +136,47 @@ public class UserController {
             }
         }else {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{userId}/games")
+    public ResponseEntity<List<Games>> getUserGames(@PathVariable long userId){
+        Optional<Users> user = userRepository.findById(userId);
+        if (user.isPresent()){
+            List<Games> gamesList = userGameRepository.findGamesByUserId(userId);
+
+            return new ResponseEntity<>(gamesList, HttpStatus.OK);
+        }else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{userId}/games")
+    public ResponseEntity<Games> addUserGame(@PathVariable("userId") long userId, @RequestBody Games game){
+        Optional<Users> existingUser = userRepository.findById(userId);
+        Optional<Games> existingGame = gameRepository.findById(game.getId());
+        // Vérifier l'existance du User
+        if (existingUser.isPresent() && existingGame.isPresent() && existingGame.get().getAvailability() == true) {
+            // Vérifier l'existance du jeu dans la liste (UserGame)
+            Users user = existingUser.get();
+            List<UserGame> userGameList = userGameRepository.findAll();
+
+            for (UserGame userGame: userGameList){
+                if (userGame.getGames().getTitle().equals(game.getTitle())){
+                    return new ResponseEntity<>(HttpStatus.CONFLICT);
+                }
+            }
+
+            // vérifier la disponibilité du jeu ensuite créer une instance UserGame et enregistrer le jeu
+            UserGame newUserGame = new UserGame();
+            newUserGame.setUser(user);
+            newUserGame.setGames(game);
+
+            userGameRepository.save(newUserGame);
+            return new ResponseEntity<>(HttpStatus.OK);
+
+        }else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 

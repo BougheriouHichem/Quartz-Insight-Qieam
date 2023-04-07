@@ -17,12 +17,13 @@ public class Games {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "title")
+    @Column(name = "title",unique = true)
     private String title;
 
     @Column(name = "url")
     private String url;
 
     @Column(name = "availability")
+    @JsonIgnoreProperties(value = {"availability"})
     private Boolean availability = true;
 }
