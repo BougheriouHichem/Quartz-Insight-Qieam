@@ -8,6 +8,7 @@ import com.apigames.quartzinsight.repository.FriendRepository;
 import com.apigames.quartzinsight.repository.GameRepository;
 import com.apigames.quartzinsight.repository.UserGameRepository;
 import com.apigames.quartzinsight.repository.UserRepository;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
+@Log4j2
 public class UserController {
 
     @Autowired
@@ -60,56 +62,48 @@ public class UserController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Users> addUser(@RequestBody Users users){
+    public ResponseEntity<String> addUser(@RequestBody Users users){
         List<Users> existingUser = userRepository.findUsersByEmail(users.getEmail());
         if (!existingUser.isEmpty()){
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return new ResponseEntity<>("User Already exist",HttpStatus.CONFLICT);
         }
         Users newUser = userRepository.save(users);
-        return ResponseEntity.ok(newUser);
+        return new ResponseEntity<>("User Added ",HttpStatus.OK);
     }
 
     @PostMapping("/{userId}/friends")
-    public ResponseEntity<Friends> AddUserFriend(@PathVariable("userId") long userId, @RequestBody Users friend){
+    public ResponseEntity<String> AddUserFriend(@PathVariable("userId") long userId, @RequestBody long friendId){
         Optional<Users> existingUser = userRepository.findById(userId);
-        if (existingUser.isPresent()){
-
-            Users user = existingUser.get();
-            List<Friends> friendsList = friendRepository.findAll();
+        Users myFriend = userRepository.findByUserIdAndFriendId(userId, friendId);
+        Optional<Users> friend = userRepository.findById(friendId);
+        if (existingUser.isPresent() && myFriend == null && friend.isPresent() && userId != friendId){
+            log.info("je suis la" );
             Friends newFriend = new Friends();
+            Users user = existingUser.get();
 
-            //Vérifier s'il n'existe pas dans la liste d'amis
-            for (Friends friendsLists: friendsList){
-                if (friendsLists.getFriends().getEmail().equals(friend.getEmail())){
-                    return ResponseEntity.status(HttpStatus.CONFLICT).build();
-                }
-            }
-
-            //Créer une nouvelle instance de Friends avec l'utilisateur et l'ami fournis
+            //############### Ajouter l'ami
             newFriend.setUser(user);
-            newFriend.setFriends(friend);
-            Friends savedNewFriend = friendRepository.save(newFriend);
+            newFriend.setFriends(friend.get());
+            friendRepository.save(newFriend);
 
             //Ici je dois Ajouter l'utilisateur à la liste d'amis de l'ami ajouté
             Friends newReversedFriend = new Friends();
-            newReversedFriend.setUser(friend);
+            newReversedFriend.setUser(friend.get());
             newReversedFriend.setFriends(user);
+
             friendRepository.save(newReversedFriend);
 
-            return ResponseEntity.ok(savedNewFriend);
-        }else {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>("New friend added ",HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("User is not found or friend already exists",HttpStatus.BAD_REQUEST);
         }
+
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable long id){
         Users existingUser = userRepository.findById(id).orElse(null);
         if (existingUser != null){
-           /* List<Friends> friendsList = friendRepository.findAllByUser_Id(id);
-            for (Friends friends: friendsList){
-                friendRepository.delete(friends);
-            }*/
             friendRepository.deleteByUserOrFriends(existingUser, existingUser);
             userRepository.deleteById(id);
             return ResponseEntity.ok().build();
@@ -130,6 +124,7 @@ public class UserController {
                     .findFirst();
             if (friendUser.isPresent()){
                 friendRepository.deleteByUserAndFriends(existingUser.get(), friendUser.get());
+                friendRepository.deleteByUserAndFriends(friendUser.get(), existingUser.get());
                 return ResponseEntity.ok().build();
             }else {
                 return ResponseEntity.notFound().build();
@@ -152,31 +147,47 @@ public class UserController {
     }
 
     @PostMapping("/{userId}/games")
-    public ResponseEntity<Games> addUserGame(@PathVariable("userId") long userId, @RequestBody Games game){
-        Optional<Users> existingUser = userRepository.findById(userId);
-        Optional<Games> existingGame = gameRepository.findById(game.getId());
-        // Vérifier l'existance du User
-        if (existingUser.isPresent() && existingGame.isPresent() && existingGame.get().getAvailability() == true) {
-            // Vérifier l'existance du jeu dans la liste (UserGame)
-            Users user = existingUser.get();
-            List<UserGame> userGameList = userGameRepository.findAll();
+    public ResponseEntity<String> addUserGame(@PathVariable("userId") long userId, @RequestBody long gameId){
+        Optional<Users> user = userRepository.findById(userId);
+        Games myGame = userRepository.findByUserIdAndGameId(userId, gameId);
+        Optional<Games> game = gameRepository.findById(gameId);
+        if (user.isPresent() && myGame == null && game.isPresent() && game.get().getAvailability() == true){
+            log.info("je suis la" );
+            UserGame newGame = new UserGame();
 
-            for (UserGame userGame: userGameList){
-                if (userGame.getGames().getTitle().equals(game.getTitle())){
-                    return new ResponseEntity<>(HttpStatus.CONFLICT);
-                }
+            //############### Ajouter un jeu
+            newGame.setUser(user.get());
+            newGame.setGames(game.get());
+            userGameRepository.save(newGame);
+
+            return new ResponseEntity<>("New game added ",HttpStatus.OK);
+        } else {
+            log.info("Bad request");
+            return new ResponseEntity<>("User is not found or game already exists",HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/users/{userId}/games/{gameId}")
+    public ResponseEntity<String> deleteUserGame(@PathVariable("userId") Long userId, @PathVariable("gameId") Long gameId) {
+        Optional<Users> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            List<Games> listGames = userGameRepository.findGamesByUserId(userId);
+
+            Optional<Games> userGame = listGames.stream()
+                    .filter(games -> games.getId() == gameId)
+                    .findFirst();
+
+
+            if (userGame.isPresent()){
+                userGameRepository.deleteByUserAndGames(userOptional.get(), userGame.get());
+                return new ResponseEntity<>("Game successfully removed from user", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("User doesn't have this game", HttpStatus.NOT_FOUND);
             }
 
-            // vérifier la disponibilité du jeu ensuite créer une instance UserGame et enregistrer le jeu
-            UserGame newUserGame = new UserGame();
-            newUserGame.setUser(user);
-            newUserGame.setGames(game);
-
-            userGameRepository.save(newUserGame);
-            return new ResponseEntity<>(HttpStatus.OK);
-
-        }else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>("User or game not found", HttpStatus.NOT_FOUND);
         }
     }
 

@@ -13,7 +13,7 @@ import lombok.*;
 public class UserGame {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "userGame_id")
+    @Column(name = "userGame_id", unique = true)
     private long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

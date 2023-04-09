@@ -13,7 +13,7 @@ public class Friends {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", unique = true)
     private long id;
 
     @ManyToOne

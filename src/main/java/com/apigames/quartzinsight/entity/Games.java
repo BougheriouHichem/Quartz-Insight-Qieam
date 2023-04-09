@@ -13,14 +13,14 @@ import lombok.*;
 @Table(name = "Games")
 public class Games {
     @Id
-    @Column(name = "game_id")
+    @Column(name = "game_id", unique = true)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(name = "title",unique = true)
     private String title;
 
-    @Column(name = "url")
+    @Column(name = "url", unique = true)
     private String url;
 
     @Column(name = "availability")
